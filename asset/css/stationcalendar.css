@@ -1,0 +1,46 @@
+body{
+        background: #fff;
+    }
+.col-7-1{
+    width: 14%;
+    float: left;
+    padding-bottom: 30px;
+	border-bottom:1px solid #8e8e8e;
+
+  }
+
+.top{
+	margin-top:30px;
+	text-align: center;
+}
+.week{
+	border-top: 1px solid #33CCFF;
+	padding-top: 20px;
+}
+.day{
+	padding-top: 10px;
+	height:100px;
+	text-align: center;
+}
+.day span{
+	font-size: 17px;
+	margin-top:0;
+
+
+}
+.day div{
+	margin-top: 7px;
+	border: 1px solid #8e8e8e;
+	width: 40%;
+	margin-left: 30%;
+	padding-top: 5px;
+}
+.day div .worktext1{
+	color:#CCCCCC;
+}
+.day div .worktext2{
+	color:#31D65A;
+}
+.day .no{
+	border: 0px;
+}

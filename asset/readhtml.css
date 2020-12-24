@@ -1,0 +1,47 @@
+
+
+  .topic{
+
+      width: 370px;
+  }
+
+  .title{
+
+      font-size: 18px; 
+
+      font-family: '微软雅黑';
+
+      display: inline-block;
+
+      padding-bottom: 5px;
+
+  }
+
+  .time span{
+
+      font-size: 13px; 
+
+      color:#A7A7A7;
+
+       display: inline-block;
+
+  }
+
+  img{
+       max-width:100%; 
+
+      }
+
+.product{
+
+ width: 370px;
+
+}
+
+.topimg{
+
+  width: 360px;
+
+  line-height: 210px;
+
+}

@@ -1,0 +1,86 @@
+﻿body {
+}
+
+.custom-input-group {
+    float: left!important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+.form-group select {
+    width:170px !important;
+}
+select {
+    height: 40px !important;
+}
+
+.panel {
+    margin-bottom: 0px !important;
+}
+
+.panel-body {
+    overflow: auto !important;
+}
+
+.vc_table tr td {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+.vc_table_10 tr td {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+.nav-tabs li.active strong {
+    font-weight: bold;
+}
+
+.vc_table tr td.control {
+    padding-left: 5px !important;
+    text-align: left !important;
+    width: 140px;
+}
+
+.vc_table tr td.title {
+    padding-right: 2px !important;
+    text-align: right !important;
+    width: 60px;
+}
+
+.vc_table_step tr td.control {
+    padding-left: 5px !important;
+    text-align: left !important;
+    width: 100px;
+}
+
+.form-control {
+    min-width: 160px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.vc_table .form-control {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.vc_table .name {
+    width: 70px;
+    text-align: right;
+    padding-left:5px;
+}
+
+.vc_table .content {
+    width:33%;
+    padding-left:10px;
+}
+
+.wordbreak {
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
+
+.disablecss{
+    color: #B9B9B9 !important;
+}
