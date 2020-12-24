@@ -1,0 +1,162 @@
+<!-- 
+    Author：LJK
+    Email：lllsuyan@163.com
+    Update：2019-08-26
+    Name：ETC常见问题列表（H5）
+ -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ETC常见问题</title>
+    <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        @import url("./reset.css");
+
+        [v-cloak] {
+            display: none;
+        }
+
+        /* 收缩 */
+        .shrink {
+            height: 0 !important;
+            overflow: hidden;
+        }
+
+        /* 展开 */
+        .spread {
+            height: auto !important;
+        }
+
+        .wrap {
+            width: 100vw;
+            min-height: 100vh;
+        }
+
+        /* 列表 */
+        .list {
+            padding: 0 20px;
+            list-style: none;
+        }
+
+        .list-item {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dcdee2;
+        }
+
+        .list-item-title {
+            padding: 10px 0;
+            font-size: 16px;
+            color: #17233d;
+        }
+
+        .list-item-content {
+            font-size: 14px;
+            line-height: 1.5em;
+            color: #515a6e;
+        }
+
+        /* 回到顶部 */
+        .back-top {
+            position: fixed;
+            right: 3%;
+            bottom: 6%;
+            z-index: 999;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="wrap">
+            <ul class="list">
+                <li class="list-item" v-for="(item,index) in list" :key="index" @click="item.collapsed=!item.collapsed">
+                    <p class="list-item-title">{{item.question}}</p>
+                    <div class="list-item-content" :class="item.collapsed?'spread':'shrink'">{{item.answer}}</div>
+                </li>
+            </ul>
+
+            <!-- 返回顶部 -->
+            <img class="back-top" v-if="show.isBackTop" @click="backTop" src="./back-top.png">
+        </div>
+    </div>
+
+    <script>
+        //test -> http://hunangstapi.u-road.com/GSTHuNanAdmin/html/EtcQuestionList.html
+        let vm = new Vue({
+            el: "#app",
+            data() {
+                return {
+                    list: [],
+                    baseUrl: "http://hunangstapi.u-road.com/HuNanGSTAppAPIServer/index.php",
+                    // 显示隐藏
+                    show: {
+                        isBackTop: false,
+                    },
+                }
+            },
+            created() {
+                this.getListData(); // 获取列表数据
+            },
+            mounted() {
+                window.addEventListener('scroll', this.handleScroll);
+            },
+            destoryed() {
+                window.removeEventListener('scroll', this.handleScroll);
+            },
+            methods: {
+                /**
+                 * 获取列表数据
+                 */
+                getListData() {
+                    let url = `${this.baseUrl}/Etc/getETCQuestion`;
+                    axios.post(url).then(res => {
+                        // console.log(res.data);
+                        if (res.data.status === "OK") {
+                            res.data.data.forEach(item => {
+                                item.collapsed = false;
+                            });
+                            this.list = res.data.data;
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                },
+                /**
+                 * 返回顶部
+                 */
+                backTop() {
+                    let y = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
+                    if (y > 0) {
+                        window.requestAnimationFrame(this.backTop);
+                        window.scrollTo(0, y - y / 8);
+                    }
+                },
+                /**
+                 * 监听滚动条
+                 */
+                handleScroll() {
+                    let scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body
+                        .scrollTop;
+                    let windowHeight = document.documentElement.clientHeight || document.body.clientHeight;
+                    let scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+                    if (scrollTop >= 60) {
+                        this.show.isBackTop = true;
+                    } else {
+                        this.show.isBackTop = false;
+                    }
+                },
+            },
+        });
+    </script>
+</body>
+
+</html>

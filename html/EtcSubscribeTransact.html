@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ETC新办</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=7e578bebe3489a4d02f222565b1fe476"></script>
+    <style>
+        @import url("./reset.css");
+
+        [v-cloak] {
+            display: none;
+        }
+
+        .wrap {
+            width: 100vw;
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        /* 表单 */
+        .form-wrap {
+            padding: 20px;
+        }
+
+        .form-item {
+            display: flex;
+            /* align-items: center; */
+            margin-bottom: 20px;
+        }
+
+        .form-item-title {
+            position: relative;
+            flex-shrink: 0;
+            width: 64px;
+            height: 35px;
+            margin-right: 15px;
+            font-size: 16px;
+            color: #17233d;
+            line-height: 35px;
+            text-align-last: justify;
+        }
+
+        .form-item-input {
+            position: relative;
+            flex: 1;
+            height: 35px;
+            padding: 0 10px;
+            font-size: 16px;
+            color: #515a6e;
+            border: 1px solid #dcdee2;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .form-item-textarea {
+            padding: 10px !important;
+            line-height: 1.2em;
+            resize: none;
+            overflow-y: auto;
+        }
+
+        label[required]::after {
+            content: "*";
+            position: absolute;
+            top: 0;
+            right: calc(100% + 2px);
+            z-index: 1;
+            color: #ff0000;
+        }
+
+        .btn-code {
+            width: 80px;
+            height: 35px;
+            margin-left: 10px;
+            font-size: 12px;
+            text-align: center;
+            line-height: 35px;
+            border-radius: 2px;
+        }
+
+        /* 车牌简称 */
+        .plate-short {
+            width: 30px;
+            height: 35px;
+            font-size: 16px;
+            text-align: center;
+            line-height: 35px;
+            border-radius: 2px;
+            border: 1px solid #dcdee2;
+        }
+
+        /* 按钮组 */
+        .btns {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            display: flex;
+            width: 100%;
+            border: 1px solid #08944E;
+        }
+
+        .btns button {
+            flex: 1;
+            height: 35px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .btn-default {
+            color: #08944E;
+            background-color: #ffffff;
+        }
+
+        .btn-success {
+            color: #ffffff;
+            background-color: #08944E;
+        }
+
+        .btn-disabled {
+            color: #ffffff;
+            background-color: #c5c8ce;
+        }
+
+        .i-location {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 35px;
+            margin-left: 10px;
+        }
+
+        .i-location img {
+            width: auto;
+            height: 25px;
+        }
+
+        /* 信息提示 */
+        .shadow-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            background-color: rgba(0, 0, 0, .3);
+        }
+
+        .msg-wrap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            width: 200px;
+            border-radius: 4px;
+            background-color: #ffffff;
+        }
+
+        .msg-content {
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.5em;
+        }
+
+        .msg-button {
+            padding: 10px 20px;
+            font-size: 14px;
+            color: #08944E;
+            text-align: right;
+        }
+
+        /* loading */
+        .loading-img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            display: block;
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="wrap">
+            <!-- 表单 -->
+            <ul class="form-wrap">
+                <li class="form-item">
+                    <label class="form-item-title" required>姓名</label>
+                    <input class="form-item-input" type="text" placeholder="请输入姓名" v-model="form.name" required>
+                </li>
+                <li class="form-item">
+                    <label class="form-item-title" required>手机号</label>
+                    <input class="form-item-input" type="number" placeholder="请输入手机号" v-model="form.mobile" required>
+                    <span class="btn-code btn-success" @click="getCode" v-if="!show.timer">获取验证码</span>
+                    <span class="btn-code btn-disabled" v-else>{{timerNumber}}s后重获</span>
+                </li>
+                <li class="form-item">
+                    <label class="form-item-title" required>验证码</label>
+                    <input class="form-item-input" type="text" placeholder="请输入手机短信验证码" v-model="form.code" required>
+                </li>
+                <li class="form-item">
+                    <label class="form-item-title" required>车牌号</label>
+                    <span class="plate-short">{{plateShort}}</span>
+                    <span style="line-height: 35px;">&nbsp;·&nbsp;</span>
+                    <input class="form-item-input" type="text" placeholder="请输入车牌号" v-model="form.platenum" required>
+                </li>
+                <li class="form-item">
+                    <label class="form-item-title" required>车牌颜色</label>
+                    <select class="form-item-input" v-model="form.colorno" required>
+                        <option value="">请选择车牌颜色</option>
+                        <option v-for="(item,index) in list.plateColor" :key="index" :value="item.dictcode">
+                            {{item.name}}</option>
+                    </select>
+                </li>
+                <li class="form-item">
+                    <label class="form-item-title" required>银行名称</label>
+                    <select class="form-item-input" v-model="form.bankno" required>
+                        <option value="">请选择办理银行</option>
+                        <option v-for="(item,index) in list.bank" :key="index" :value="item.dictcode">
+                            {{item.name}}</option>
+                    </select>
+                </li>
+                <li class="form-item">
+                    <label class="form-item-title" required>就近地址</label>
+                    <textarea class="form-item-input form-item-textarea" style="height: 80px;" placeholder="请输入地址"
+                        v-model="form.address" required></textarea>
+                    <span class="i-location" @click="getLocationInfo">
+                        <img src="./location.png">
+                    </span>
+                </li>
+            </ul>
+
+            <!-- 按钮组 -->
+            <div class="btns">
+                <button class="btn-success" @click="verifyForm">提交</button>
+            </div>
+
+            <!-- loading -->
+            <div class="shadow-wrap" v-show="show.loading">
+                <img class="loading-img" src="./loading.gif">
+            </div>
+
+            <!-- msg -->
+            <div class="shadow-wrap" v-show="show.msg">
+                <div class="msg-wrap">
+                    <p class="msg-content">{{msg}}</p>
+                    <p class="msg-button" @click="closeMsg">确定</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        //test -> http://hunangstapi.u-road.com/GSTHuNanAdmin/html/EtcSubscribeTransact.html
+        new Vue({
+            el: "#app",
+            data() {
+                return {
+                    timerNumber: 60,
+                    msg: "", // 信息提示
+                    baseUrl: "http://hunangstapi.u-road.com/HuNanGSTAppAPIServer/index.php", // 基础域名
+                    plateShort: "湘", // 车牌简称
+                    // 列表
+                    list: {
+                        plateColor: [],
+                        bank: [],
+                    },
+                    // 表单
+                    form: {
+                        usreuuid: "", // 用户id
+                        name: "", // 用户姓名
+                        mobile: "", // 手机号
+                        code: "", // 短信验证码
+                        platenum: "", // 车牌号
+                        colorno: "", // 车牌颜色编号
+                        bankno: "", // 银行编号
+                        address: "", // 就近地址
+                    },
+                    // 显示隐藏
+                    show: {
+                        msg: false,
+                        loading: false,
+                        timer: false,
+                        isBack: false,
+                    },
+                }
+            },
+            created() {
+                this.getUrlParamsToObj(); // 获取url参数转参数对象
+                this.getPlateColorList(); // 获取车牌颜色列表
+                this.getBankList(); // 获取银行列表
+            },
+            mounted() {
+                setTimeout(() => {
+                    this.getLocationInfo(); // 获取定位信息
+                }, 2000);
+            },
+            methods: {
+                /**
+                 * 获取url参数转参数对象
+                 */
+                getUrlParamsToObj() {
+                    let params = window.location.search;
+                    if (params) {
+                        // url参数处理 -> 转json对象
+                        params = decodeURI(params.replace(/\?/g, "")).split("&");
+                        let obj = {};
+                        for (let i = 0; i < params.length; i++) {
+                            let temp = params[i].split("=");
+                            obj[temp[0]] = temp[1];
+                        }
+                        // 初始化表单值
+                        this.form.usreuuid = obj.usreuuid || ""; // 用户id
+                        this.form.name = obj.name || ""; // 用户名
+                        this.form.mobile = obj.mobile || ""; // 手机号
+                        this.form.code = obj.code || ""; // 验证码
+                        if (obj.platenum) { // 车牌号
+                            if (obj.platenum.substr(0, 1) == "湘") {
+                                this.form.platenum = obj.platenum.replace(1, "");
+                            } else {
+                                this.msg = "在线办理只能为“湘”牌车！";
+                                this.show.msg = true;
+                            }
+                        }
+                        this.form.colorno = obj.color || ""; // 车牌颜色编号
+                        this.form.bankno = obj.bankno || ""; // 银行编号
+                        this.form.address = obj.address || ""; // 就近地址
+                    }
+                },
+                /**
+                 * 获取车牌颜色列表
+                 */
+                getPlateColorList() {
+                    let url = `${this.baseUrl}/Etc/getPlateColorList`;
+                    axios.post(url).then(res => {
+                        // console.log(res.data);
+                        if (res.data.status === "OK") {
+                            // 由于app端带过来的是中文颜色名，此处做处理，选定对应默认值
+                            if (/[\u4e00-\u9fa5]/gm.test(this.form.colorno)) {
+                                let item = res.data.data.filter((item, index) => {
+                                    return item.name == this.form.colorno;
+                                });
+                                this.form.colorno = item[0].dictcode;
+                            }
+                            this.list.plateColor = res.data.data;
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                },
+                /**
+                 * 获取银行列表
+                 */
+                getBankList() {
+                    let url = `${this.baseUrl}/Etc/getBankList`;
+                    axios.post(url).then(res => {
+                        // console.log(res.data);
+                        if (res.data.status === "OK") {
+                            this.list.bank = res.data.data;
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                },
+                /**
+                 * 获取定位信息
+                 */
+                getLocationInfo() {
+                    let that = this;
+                    that.show.loading = true;
+                    let dom = document.createElement("div");
+                    let map = new AMap.Map(dom);
+                    map.plugin('AMap.Geolocation', function () {
+                        let geolocation = new AMap.Geolocation({
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                        });
+                        geolocation.getCurrentPosition();
+                        AMap.event.addListener(geolocation, 'complete', function (res) {
+                            console.log(res);
+                            that.form.address = res.formattedAddress;
+                            that.show.loading = false;
+                        });
+                        AMap.event.addListener(geolocation, 'error', function (err) {
+                            console.log(err);
+                            that.msg = "定位失败，是否已开启“定位服务”或尝试手动输入！";
+                            that.show.msg = true;
+                            that.show.loading = false;
+                        });
+                    });
+                },
+                /**
+                 * 获取手机短信验证码
+                 */
+                getCode() {
+                    let reg = /^(0|86|17951)?(13[0-9]|15[012356789]|166|17[3678]|18[0-9]|14[57])[0-9]{8}$/;
+                    if (reg.test(this.form.mobile)) {
+                        let url = `${this.baseUrl}/message/sendSMSCode`;
+                        let formData = new FormData();
+                        formData.append("type", 5); // 1：注册、2：忘记密码、3：推广、4：换绑手机、5：ETC预约办理
+                        formData.append("phone", this.form.mobile); // 手机号
+                        axios.post(url, formData).then(res => {
+                            // console.log(res.data);
+                            if (res.data.status === "OK") {
+                                // 启动计时器
+                                this.show.timer = true;
+                                const timer = setInterval(() => {
+                                    if (this.timerNumber == 0) {
+                                        this.show.timer = false;
+                                        clearInterval(timer);
+                                    } else {
+                                        this.timerNumber--;
+                                    }
+                                }, 1000);
+                            } else {
+                                this.msg = res.data.msg;
+                                this.show.msg = true;
+                            }
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    } else {
+                        this.msg = "手机号码格式不正确，请重新输入！";
+                        this.show.msg = true;
+                    }
+                },
+                /**
+                 * 检验表单
+                 */
+                verifyForm() {
+                    if (!this.form.name) {
+                        this.msg = "请输入姓名";
+                        this.show.msg = true;
+                    } else if (!this.form.mobile) {
+                        this.msg = "请输入手机号";
+                        this.show.msg = true;
+                        return;
+                    } else if (!this.form.code) {
+                        this.msg = "请输入验证码";
+                        this.show.msg = true;
+                        return;
+                    } else if (!this.form.platenum) {
+                        this.msg = "请输入车牌号码";
+                        this.show.msg = true;
+                        return;
+                    } else if (!this.form.colorno) {
+                        this.msg = "请选择车牌颜色";
+                        this.show.msg = true;
+                        return;
+                    } else if (!this.form.bankno) {
+                        this.msg = "请选择办理银行";
+                        this.show.msg = true;
+                        return;
+                    } else if (!this.form.address) {
+                        this.msg = "请输入地址";
+                        this.show.msg = true;
+                        return;
+                    } else {
+                        this.verifyCode();
+                    }
+                },
+                /**
+                 * 检验短信验证码
+                 */
+                verifyCode() {
+                    this.show.loading = true;
+                    let url = `${this.baseUrl}/message/checkCode`;
+                    let formData = new FormData();
+                    formData.append("phone", this.form.mobile); // 手机号
+                    formData.append("code", this.form.code); // 验证码
+                    axios.post(url, formData).then(res => {
+                        // console.log(res.data);
+                        if (res.data.status === "OK") {
+                            this.submit(); // 提交预约
+                        } else {
+                            this.msg = res.data.msg;
+                            this.show.msg = true;
+                            this.show.loading = false;
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                        this.show.loading = false;
+                    });
+                },
+                /**
+                 * 提交预约
+                 */
+                submit() {
+                    let url = `${this.baseUrl}/Etc/applyETCCard`;
+                    let platenum = `${this.plateShort}${this.form.platenum.toUpperCase()}`;
+                    let formData = new FormData();
+                    formData.append("usreuuid", this.form.usreuuid); // 用户id
+                    formData.append("name", this.form.name); // 用户名
+                    formData.append("mobile", this.form.mobile); // 手机号
+                    formData.append("code", this.form.code); // 验证码
+                    formData.append("platenum", platenum); // 车牌号
+                    formData.append("colorno", this.form.colorno); // 车牌颜色编号
+                    formData.append("bankno", this.form.bankno); // 银行编号
+                    formData.append("address", this.form.address); // 就近地址
+                    axios.post(url, formData).then(res => {
+                        // console.log(res.data);
+                        if (res.data.status === "OK") {
+                            this.msg = res.data.data;
+                            this.show.isBack = true;
+                        } else {
+                            this.msg = res.data.msg;
+                        }
+                        this.show.msg = true;
+                        this.show.loading = false;
+                    }).catch(err => {
+                        console.log(err);
+                        this.show.loading = false;
+                    });
+                },
+                /**
+                 * 清空/关闭
+                 */
+                clearClose() {
+                    window.history.go(-1);
+                    // let ua = window.navigator.userAgent;
+                    // if (!!ua.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/)) { // ios端
+                    //     uroadplus_close();
+                    // } else if (ua.indexOf('Android') > -1 || ua.indexOf('Adr') > -1) { // android端
+                    //     for (let key in this.form) {
+                    //         this.form[key] = "";
+                    //     }
+                    //     if (ua.match(/MicroMessenger/i) == 'MicroMessenger') { // 微信浏览器
+                    //         // window.history.go(-1);
+                    //         window.location.href =
+                    //             "http://hunangstapi.u-road.com/HuNanGSTAliPayAPIServer/ETC/index";
+                    //     } else {
+                    //         AndroidNative.closeActivity();
+                    //     }
+                    // } else {
+                    //     for (let key in this.form) {
+                    //         this.form[key] = "";
+                    //     }
+                    //     window.history.go(-1);
+                    // }
+                },
+                /**
+                 * 关闭信息框
+                 */
+                closeMsg() {
+                    this.show.msg = !this.show.msg;
+                    if (this.show.isBack) {
+                        this.clearClose();
+                        this.show.isBack = false;
+                    }
+                },
+            },
+        });
+    </script>
+</body>
+
+</html>
